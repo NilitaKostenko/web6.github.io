@@ -3,7 +3,7 @@ const products = {
         "name": "Картофель",
         "price": 150,
         "subproducts": [ ],
-        "subproperty": { }
+        "subproperties": [ ]
     },
     "p2": {
         "name": "Помидоры",
@@ -26,16 +26,18 @@ const products = {
                 "price": 180
             }
         ],
-        "subproperty": { }
+        "subproperties": [ ]
     },
     "p3": {
         "name": "Огурцы",
         "price": 100,
         "subproducts": [ ],
-        "subproperty": {
-            "name": "Отборные",
-            "multiplier": 0.9
-        }
+        "subproperties": [
+            {
+                "name": "Отборные",
+                "multiplier": 0.9
+            }
+        ]
     },
     "p4": {
         "name": "Морковь",
@@ -54,16 +56,22 @@ const products = {
                 "price": 200
             },
         ],
-        "subproperty": {
-            "name": "Свежие",
-            "multiplier": 1.1
-        }
+        "subproperties": [
+            {
+                "name": "Свежие",
+                "multiplier": 1.1
+            },
+            {
+                "name": "Отборные",
+                "multiplier": 1.2
+            }
+        ]
     },
     "p5": {
         "name": "Грибы",
         "price": 150,
         "subproducts": [ ],
-        "subproperty": { }
+        "subproperties": [ ]
     },
 }
 
@@ -98,8 +106,7 @@ function changeProductType() {
     let product = products[selectedType];
 
     let subproductsSelectEl = document.getElementById("subproducts-select");
-    let subproductsCheckbox = document.getElementById("product-property");
-    let subproductsCheckboxLabel = document.getElementById("product-property-label");
+    let subproductsCheckboxes = document.getElementById("subproduct-properties");
     
     subproductsSelectEl.innerHTML = " ";
 
@@ -115,21 +122,36 @@ function changeProductType() {
     loadSubproductsOptions(subproducts, subproductsSelectEl);
     
 
-    // Добавление доп услуги
-    let subproductProperty = product["subproperty"];
+    // Добавление доп услуг
+    let subproductProperties = product["subproperties"];
 
-    if (Object.keys(subproductProperty).length > 0) {
-        subproductsCheckbox.removeAttribute("disabled");
-        subproductsCheckbox.setAttribute("value", subproductProperty["multiplier"]);
-        subproductsCheckboxLabel.innerText = subproductProperty["name"];
-        subproductsCheckboxLabel.style.opacity = 1; 
+    
+    //^^
+    subproductsCheckboxes.innerHTML = " ";
+    if (Object.keys(subproductProperties).length > 0) {
+        let index = 0;
+        subproductProperties.forEach(sProperty => {
+            let checkboxDiv = document.createElement("div");
+            checkboxDiv.id = "product-property-div-" + index;
+            let cbInputEl = document.createElement("input");
+            cbInputEl.type = "checkbox";
+            cbInputEl.name = "product-property-" + index;
+            cbInputEl.id = "product-property-" + index;
+            cbInputEl.value = sProperty.multiplier;
+            checkboxDiv.appendChild(cbInputEl);
+
+            let cbLabel = document.createElement("label");
+            cbLabel.setAttribute("for", "product-property-" + index);
+            cbLabel.id = "product-property-label-" + index;
+            cbLabel.innerText = sProperty.name;
+            checkboxDiv.appendChild(cbLabel);
+
+            subproductsCheckboxes.appendChild(checkboxDiv);
+            index++;
+        });
     }
-    else {
-        subproductsCheckbox.setAttribute("disabled", "");
-        subproductsCheckbox.setAttribute("value", "");
-        subproductsCheckboxLabel.innerText = "No Property";
-        subproductsCheckboxLabel.setAttribute("style", "opacity: 0");
-    }
+    //^^
+    
 }
 
 function calculate() {
@@ -164,15 +186,25 @@ function calculate() {
         }
     }
 
-    let productMultiplier;
-    if (subproductPropertyEl.getAttribute("disabled") === null && subproductPropertyEl.checked) {
-        productMultiplier = subproductPropertyEl.value;
-    }
-    else {
-        productMultiplier = 1;
-    }
+    
+    //^^
+    let result = quantity * productPrice;
 
-    let result = quantity * productPrice * productMultiplier;
+    let subproductProperties = product["subproperties"];
+    if (Object.keys(subproductProperties).length > 0) {
+        let index = 0;
+        subproductProperties.forEach(sProperty => {
+            let sPropertyId = "product-property-" + index;
+            let cbInputEl = document.getElementById(sPropertyId);
+            if (cbInputEl.checked) {
+                result *= cbInputEl.value;
+            }
+            index++;
+        });
+    }
+    //^^
+    
+
     if (isNaN(result) || result < 0) {
         result = "Некорректный ввод"; 
     }
